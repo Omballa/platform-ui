@@ -1,5 +1,6 @@
 export enum AppSubdomain {
     accounts = 'account-settings',
+    rfpTool = 'rfp-tool',
     devCenter = 'devcenter',
     earn = 'earn',
     profiles = 'profiles',
@@ -19,6 +20,7 @@ export enum AppSubdomain {
 
 export enum ToolTitle {
     accounts = 'Account Settings',
+    rfpTool = 'RFP Tool',
     devCenter = 'Dev Center',
     earn = 'Opportunity Feed',
     profiles = 'Profiles',

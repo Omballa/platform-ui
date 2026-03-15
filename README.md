@@ -555,6 +555,7 @@ The following summarizes the various [apps](#adding-a-new-platform-ui-applicatio
 - [Earn](#earn)
 - [Gamification Admin](#gamification-admin)
 - [Learn](#learn)
+- [RFP Tool](#rfp-tool)
 - [Self Service](#self-service)
 
 ## Platform App
@@ -592,6 +593,13 @@ Application that serves 3rd-party educational content.
 
 [Learn README](./src/apps/learn/README.md)
 [Learn Routes](./src/apps/learn/src/learn.routes.tsx)
+
+## RFP Tool
+
+Application that provides the Proposal Management workflow for the RFP Tool module.
+
+[RFP Tool README](./src/apps/rfp-tool/README.md)
+[RFP Tool Routes](./src/apps/rfp-tool/src/rfp-tool.routes.tsx)
 
 ## Self Service
 

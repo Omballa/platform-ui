@@ -1,0 +1,1 @@
+export { NewProposalModal } from './NewProposalModal'

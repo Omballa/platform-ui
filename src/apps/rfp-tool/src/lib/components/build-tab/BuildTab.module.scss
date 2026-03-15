@@ -1,0 +1,172 @@
+@import '@libs/ui/styles/includes';
+
+/**
+ * BuildTab styles
+ * Matches TC design language with consistent spacing, colors, and borders
+ */
+
+.buildTab {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3; // 12px between sections - tighter spacing
+  min-height: 100%;
+}
+
+.timerRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.timer {
+  color: $black-100;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.timerWarning {
+  color: $orange-140;
+}
+
+.timerExpired {
+  color: $red-120;
+}
+
+.panel {
+  padding: $sp-4 0; // 16px vertical, no horizontal padding
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3; // 12px internal gap - tighter spacing
+  border-bottom: 1px solid $black-10;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .panelHeader {
+    font-size: 1.1rem; // 17.6px
+    font-weight: 600;
+    color: $black-100;
+    margin: 0;
+    margin-bottom: $sp-1; // 4px - tighter spacing
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .panelContent {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3; // 12px - tighter spacing
+  }
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: $sp-2; // 8px
+  padding: $sp-6; // 24px
+  border: 1px dashed $black-20;
+  border-radius: 16px;
+  color: $black-60;
+  font-size: 0.95rem;
+  background: $black-5;
+}
+
+// DocumentsPanel specific styles
+.documentsList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $sp-3; // 12px gap between items
+}
+
+.documentItem {
+  padding: $sp-3; // 12px
+  border: 1px solid $black-10;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: $black-100;
+  word-break: break-word;
+  background: $tc-white;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $black-5;
+    border-color: $turq-160;
+  }
+}
+
+// RequestPanel specific styles
+.summaryContainer {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-1; // 4px - tighter spacing
+}
+
+.wordCounter {
+  font-size: 0.85rem;
+  color: $black-60;
+  margin-top: 2px; // 2px - minimal spacing
+}
+
+.wordCounterWarning {
+  color: $orange-140;
+}
+
+.wordCounterError {
+  color: $red-120;
+}
+
+// QAPanel specific styles
+.questionContainer {
+  padding: $sp-3 0; // 12px vertical, no horizontal padding
+  display: flex;
+  flex-direction: column;
+  gap: $sp-2; // 8px - tighter spacing
+  border-bottom: 1px solid $black-10;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.questionText {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: $black-100;
+  margin: 0;
+}
+
+.answerField {
+  min-height: 80px;
+  padding: $sp-2; // 8px - tighter padding
+  border: 1px solid $black-20;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: $black-100;
+  background: $tc-white;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: $turq-160;
+    box-shadow: 0 0 0 3px rgba($turq-160, 0.15);
+  }
+}
+
+.panelActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: $sp-3;
+}
+
+// Responsive: mobile - single column for documents
+@media (max-width: 768px) {
+  .documentsList {
+    grid-template-columns: 1fr;
+  }
+}

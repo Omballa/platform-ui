@@ -1,0 +1,131 @@
+@import '@libs/ui/styles/includes';
+
+/**
+ * Sidebar styles
+ * Matches TC design language with consistent spacing, colors, and borders
+ */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .header {
+    padding: 0 $sp-4; // horizontal padding only - height handles vertical
+    border-bottom: 1px solid $black-10;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 57px; // Match ContentTabs height
+
+    @media (max-width: 768px) {
+      cursor: pointer;
+
+      &:active {
+        background-color: $black-5;
+      }
+    }
+
+    .title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: $black-100;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1;
+    }
+
+    .newButton {
+      min-width: auto;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+    }
+  }
+
+  .proposalsList {
+    flex: 1;
+    overflow-y: auto;
+    padding: $sp-2 0; // 8px vertical
+    display: flex;
+    flex-direction: column;
+
+    .emptyState {
+      padding: $sp-8 $sp-4; // 32px vertical, 16px horizontal
+      text-align: center;
+      color: $black-60;
+      font-size: 0.95rem;
+    }
+
+    // Mobile accordion behavior - hide by default, show when open
+    @media (max-width: 768px) {
+      display: none;
+
+      &[data-accordion-open='true'] {
+        display: flex;
+      }
+    }
+  }
+}
+
+// Scrollbar styling
+.proposalsList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.proposalsList::-webkit-scrollbar-track {
+  background: $black-5;
+}
+
+.proposalsList::-webkit-scrollbar-thumb {
+  background: $black-20;
+  border-radius: 4px;
+
+  &:hover {
+    background: $black-40;
+  }
+}
+
+// ProposalListItem styles
+.listItem {
+  padding: $sp-3 $sp-4; // 12px vertical, 16px horizontal
+  border-left: 4px solid transparent;
+  background-color: transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: $black-5;
+  }
+
+  &.active {
+    border-left-color: $turq-160;
+    background-color: $black-5;
+  }
+}
+
+.listItemContent {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-1; // 4px
+}
+
+.listItemName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: $black-100;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.listItemStatus {
+  font-size: 0.85rem;
+  color: $black-60;
+}
+
+.listItem.active .listItemName {
+  color: $turq-160;
+}

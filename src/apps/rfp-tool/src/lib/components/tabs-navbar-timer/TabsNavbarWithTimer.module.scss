@@ -1,0 +1,40 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+  position: relative;
+  width: 100%;
+}
+
+.tabs {
+  min-width: 0;
+}
+
+.timer {
+  position: absolute;
+  top: 50%;
+  right: $sp-4;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: $black-100;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.timerWarning {
+  color: $orange-140;
+}
+
+.timerExpired {
+  color: $red-120;
+}
+
+@media (max-width: 768px) {
+  .tabs {
+    width: 100%;
+  }
+
+  .timer {
+    right: $sp-3;
+  }
+}

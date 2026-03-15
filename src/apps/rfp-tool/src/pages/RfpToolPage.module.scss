@@ -1,0 +1,89 @@
+@import '@libs/ui/styles/includes';
+
+/**
+ * RfpToolPage styles
+ * Implements the split-view layout with sidebar and content area
+ */
+
+.contentLayoutOuter {
+  margin: $sp-8 auto !important; // Match Wallet page spacing pattern
+}
+
+.pageContainer {
+  display: flex;
+  gap: $sp-3;
+  background-color: $tc-white;
+  border-radius: 0;
+  height: 100vh;
+
+  .sidebar {
+    width: 320px;
+    flex-shrink: 0;
+  }
+
+  .contentArea {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: $sp-6; // 24px
+    }
+  }
+}
+
+// Responsive: tablet and smaller
+@media (max-width: 1024px) {
+  .pageContainer {
+    .sidebar {
+      width: 280px;
+    }
+
+    .contentArea .content {
+      padding: $sp-4; // 16px
+    }
+  }
+}
+
+// Responsive: mobile
+@media (max-width: 768px) {
+  .pageContainer {
+    flex-direction: column;
+    gap: 0;
+    height: auto;
+
+    .sidebar {
+      width: 100%;
+      border-bottom: 1px solid $black-10;
+      // Accordion behavior handled in Sidebar component
+      max-height: none;
+    }
+
+    .contentArea {
+      .content {
+        padding: $sp-3; // 12px
+      }
+    }
+  }
+}
+
+// Scrollbar styles
+.contentArea .content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.contentArea .content::-webkit-scrollbar-track {
+  background: $black-5;
+}
+
+.contentArea .content::-webkit-scrollbar-thumb {
+  background: $black-20;
+  border-radius: 4px;
+
+  &:hover {
+    background: $black-40;
+  }
+}
