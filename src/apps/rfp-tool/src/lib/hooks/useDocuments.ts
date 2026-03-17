@@ -34,7 +34,7 @@ export function useDocuments(proposalId: string | undefined): UseDocumentsResult
      */
     const addDocuments = useCallback((newDocuments: ProposalDocument[]): void => {
         swr.mutate(current => ([...(current ?? []), ...newDocuments]), false)
-            .catch(() => undefined)
+            .catch(err => console.error('[useDocuments] addDocuments mutate failed:', err))
     }, [swr])
 
     /**
@@ -42,7 +42,7 @@ export function useDocuments(proposalId: string | undefined): UseDocumentsResult
      */
     const setDocuments = useCallback((nextDocuments: ProposalDocument[]): void => {
         swr.mutate(nextDocuments, false)
-            .catch(() => undefined)
+            .catch(err => console.error('[useDocuments] setDocuments mutate failed:', err))
     }, [swr])
 
     /**

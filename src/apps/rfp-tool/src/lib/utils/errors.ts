@@ -10,6 +10,10 @@ export const getApiErrorMessage = (err: unknown, fallback: string): string => {
         return 'Unable to connect to the server. Please check your connection.'
     }
 
+    if (status === 408) {
+        return 'The assessment context has expired. Please re-assess the proposal.'
+    }
+
     if (status >= 500) {
         return 'Something went wrong. Please try again later.'
     }

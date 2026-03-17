@@ -4,7 +4,7 @@
  */
 
 import type { FC, MouseEvent } from 'react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button, LoadingSpinner } from '~/libs/ui'
 
@@ -31,10 +31,35 @@ export const Sidebar: FC<SidebarProps> = props => {
     const refresh = proposalsState.refresh
     const [showNewProposalModal, setShowNewProposalModal] = useState(false)
 
+    // 9.1: Stable display order — sort only on initial load, prepend new proposals
+    const stableOrderRef = useRef<string[]>([])
+    const initialLoadDoneRef = useRef(false)
+
+    useEffect(() => {
+        if (!isLoading && !initialLoadDoneRef.current && proposals.length > 0) {
+            stableOrderRef.current = proposals.map(p => p.id)
+            initialLoadDoneRef.current = true
+        }
+    }, [isLoading, proposals])
+
+    const displayedProposals = initialLoadDoneRef.current
+        ? [
+            ...proposals.filter(p => !stableOrderRef.current.includes(p.id)),
+            ...stableOrderRef.current
+                .map(id => proposals.find(p => p.id === id))
+                .filter((p): p is NonNullable<typeof p> => p !== undefined),
+        ]
+        : proposals
+
     function handleNewProposalSuccess(newProposalId: string): void {
         setShowNewProposalModal(false)
         props.onSelectProposal(newProposalId)
-        refresh()
+        refresh().then(() => {
+            // After refresh, prepend the new proposal id to stable order if not already tracked
+            if (!stableOrderRef.current.includes(newProposalId)) {
+                stableOrderRef.current = [newProposalId, ...stableOrderRef.current]
+            }
+        }).catch(() => undefined)
     }
 
     function handleHeaderClick(): void {
@@ -71,10 +96,10 @@ export const Sidebar: FC<SidebarProps> = props => {
             <div className={styles.proposalsList} data-accordion-open={props.isAccordionOpen}>
                 {isLoading ? (
                     <LoadingSpinner />
-                ) : proposals.length === 0 ? (
+                ) : displayedProposals.length === 0 ? (
                     <div className={styles.emptyState}>No proposals yet. Create one to get started.</div>
                 ) : (
-                    proposals.map(proposal => (
+                    displayedProposals.map(proposal => (
                         <ProposalListItem
                             key={proposal.id}
                             proposal={proposal}

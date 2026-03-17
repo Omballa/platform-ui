@@ -15,11 +15,10 @@ import {
     answerQuestions,
     assessProposal,
     createProposal,
-    getProposals,
     requestQuote,
     uploadDocuments,
 } from '../lib/services'
-import { getDocumentsSwrKey, getProposalSwrKey, PROPOSALS_SWR_KEY } from '../lib/services/cache-keys'
+import { getDocumentsSwrKey, PROPOSALS_SWR_KEY } from '../lib/services/cache-keys'
 import { storePdfUrl } from '../lib/utils/storage'
 
 import { ACTION_TYPES, type MutationOperation } from './action-types'
@@ -137,22 +136,17 @@ export const assessProposalThunk = (proposalId: string, body: AssessProposalRequ
     try {
         const response = await assessProposal(proposalId, body)
 
-        // Optimistically apply assess response to the single-proposal cache so
-        // BuildTab sees status/questions/timerStartedAt immediately, then
-        // revalidate in the background to sync any other server-side changes.
         await mutate(
-            getProposalSwrKey(proposalId),
-            (current: Proposal | undefined) => (
-                current
-                    ? {
-                        ...current,
-                        questions: response.questions,
-                        stub: response.stub,
-                        timerStartedAt: response.timerStartedAt,
-                        status: 'ASSESSED' as const,
-                    }
-                    : current
-            ),
+            PROPOSALS_SWR_KEY,
+            (current?: ProposalsListResponse) => ({
+                proposals: current
+                    ? current.proposals.map(p =>
+                        p.id === proposalId
+                            ? { ...p, questions: response.questions, stub: response.stub, timerStartedAt: response.timerStartedAt, status: 'ASSESSED' as const }
+                            : p,
+                    )
+                    : [],
+            }),
             false,
         )
         await refreshProposals()
@@ -178,12 +172,16 @@ export const answerQuestionsThunk = (proposalId: string, body: AnswerQuestionsRe
         const response = await answerQuestions(proposalId, body)
         storePdfUrl(proposalId, response.pdfUrl)
         await mutate(
-            getProposalSwrKey(proposalId),
-            (current: Proposal | undefined) => (
-                current
-                    ? { ...current, pdfUrl: response.pdfUrl, status: 'COMPLETED' as const }
-                    : current
-            ),
+            PROPOSALS_SWR_KEY,
+            (current?: ProposalsListResponse) => ({
+                proposals: current
+                    ? current.proposals.map(p =>
+                        p.id === proposalId
+                            ? { ...p, pdfUrl: response.pdfUrl, status: 'COMPLETED' as const }
+                            : p,
+                    )
+                    : [],
+            }),
             false,
         )
         await refreshProposals()

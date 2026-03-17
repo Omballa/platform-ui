@@ -87,9 +87,8 @@ export const DocumentsPanel: FC<DocumentsPanelProps> = props => {
                 {`Documents (${documents.length}/10)`}
             </h3>
             <div className={styles.panelContent}>
-                {isLoading && documents.length === 0 && (
-                    <LoadingSpinner />
-                )}
+                {/* 9.2: Show spinner during refresh even when cached documents exist */}
+                {isLoading && <LoadingSpinner />}
 
                 {/* Documents list */}
                 {documents.length > 0 && (

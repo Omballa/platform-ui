@@ -6,7 +6,6 @@ import { getProposals } from '../services'
 import { PROPOSALS_SWR_KEY } from '../services/cache-keys'
 
 interface UseProposalsResult {
-    addProposal: (proposal: Proposal) => void
     error: string | undefined
     isLoading: boolean
     isValidating: boolean
@@ -31,15 +30,7 @@ export function useProposals(): UseProposalsResult {
         await swr.mutate()
     }, [swr])
 
-    const addProposal = useCallback((proposal: Proposal): void => {
-        swr.mutate(current => ({
-            proposals: current ? [proposal, ...current.proposals] : [proposal],
-        }), false)
-            .catch(() => undefined)
-    }, [swr])
-
     return {
-        addProposal,
         error,
         isLoading,
         isValidating: swr.isValidating,

@@ -64,7 +64,6 @@ describe('Sidebar', () => {
     beforeEach(() => {
         mockRefresh.mockReset()
         mockUseProposals.mockReturnValue({
-            addProposal: jest.fn(),
             error: undefined,
             isLoading: false,
             proposals,

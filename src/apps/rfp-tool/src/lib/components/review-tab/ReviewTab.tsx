@@ -9,7 +9,7 @@ import { toast } from 'react-toastify'
 
 import { Button } from '~/libs/ui'
 
-import { useProposal, useProposals } from '../../hooks'
+import { useProposal } from '../../hooks'
 import { requestQuoteThunk, useRfpToolDispatch, useRfpToolSelector } from '../../../redux'
 import { getApiErrorMessage } from '../../utils'
 import { getStoredPdfUrl } from '../../utils/storage'
@@ -52,9 +52,7 @@ export const ReviewTab: FC<ReviewTabProps> = props => {
         }
     }
 
-    const { proposals } = useProposals()
-    const listedProposal = proposals.find(p => p.id === props.proposalId)
-    const status = proposal?.status ?? listedProposal?.status
+    const status = proposal?.status
     const isProposalComplete = status === 'COMPLETED' || status === 'QUOTE_REQUESTED'
     const isQuoteRequested = status === 'QUOTE_REQUESTED'
     const [pdfError, setPdfError] = useState(false)

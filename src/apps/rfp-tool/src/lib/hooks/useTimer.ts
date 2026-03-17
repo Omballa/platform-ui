@@ -3,7 +3,7 @@
  * Survives page refresh by storing timer start time in localStorage
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { TIMER_DURATION_MS } from '../../config'
 import { getFromStorage, removeFromStorage, setToStorage } from '../utils'
@@ -33,6 +33,9 @@ export function useTimer(proposalId: string | undefined): UseTimerResult {
     const [isExpired, setIsExpired] = useState(false)
     const [isActive, setIsActive] = useState(false)
 
+    // 9.3: Store expiresAt in a ref after initial read to avoid re-reading storage on every tick
+    const expiresAtRef = useRef<number | undefined>(undefined)
+
     // Generate storage key
     const storageKey = proposalId ? `rfp-tool-timer-${proposalId}` : undefined
 
@@ -55,8 +58,8 @@ export function useTimer(proposalId: string | undefined): UseTimerResult {
         }
 
         // Check if timer has already expired
-        const expiresAt = new Date(timerData.expiresAt)
-            .getTime()
+        const expiresAt = new Date(timerData.expiresAt).getTime()
+        expiresAtRef.current = expiresAt
         const now = Date.now()
         const remaining = expiresAt - now
 
@@ -78,17 +81,15 @@ export function useTimer(proposalId: string | undefined): UseTimerResult {
         }
 
         const updateTimer = (): void => {
-            const timerData = getFromStorage<TimerData>(storageKey)
+            const expiresAt = expiresAtRef.current
 
-            if (!timerData) {
+            if (expiresAt === undefined) {
                 setIsActive(false)
                 setIsExpired(false)
                 setTimeRemaining(undefined)
                 return
             }
 
-            const expiresAt = new Date(timerData.expiresAt)
-                .getTime()
             const now = Date.now()
             const remaining = expiresAt - now
 
@@ -141,6 +142,7 @@ export function useTimer(proposalId: string | undefined): UseTimerResult {
             }
 
             setToStorage(storageKey, timerData)
+            expiresAtRef.current = expiresAt.getTime()
             setTimeRemaining(remaining)
             setIsExpired(false)
             setIsActive(true)
@@ -156,6 +158,7 @@ export function useTimer(proposalId: string | undefined): UseTimerResult {
             removeFromStorage(storageKey)
         }
 
+        expiresAtRef.current = undefined
         setTimeRemaining(undefined)
         setIsExpired(false)
         setIsActive(false)
@@ -169,6 +172,7 @@ export function useTimer(proposalId: string | undefined): UseTimerResult {
             removeFromStorage(storageKey)
         }
 
+        expiresAtRef.current = undefined
         setTimeRemaining(undefined)
         setIsExpired(false)
         setIsActive(false)
