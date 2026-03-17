@@ -14,6 +14,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { ConfirmModal, InputText } from '~/libs/ui'
 
 import { createProposalThunk, useRfpToolDispatch, useRfpToolSelector } from '../../../redux'
+import { getApiErrorMessage } from '../../utils'
 
 const toastOptions = {
     position: toast.POSITION.BOTTOM_RIGHT,
@@ -79,8 +80,7 @@ export const NewProposalModal: FC<NewProposalModalProps> = props => {
             toast.success('Proposal created successfully', toastOptions)
             props.onSuccess(newProposal.id)
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to create proposal'
-            toast.error(errorMessage, toastOptions)
+            toast.error(getApiErrorMessage(err, 'Failed to create proposal'), toastOptions)
         }
     }
 

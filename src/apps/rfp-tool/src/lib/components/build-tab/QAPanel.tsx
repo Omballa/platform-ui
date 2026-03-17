@@ -13,6 +13,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { Button, InputTextarea, LoadingSpinner } from '~/libs/ui'
 
 import { answerQuestionsThunk, useRfpToolDispatch, useRfpToolSelector } from '../../../redux'
+import { getApiErrorMessage } from '../../utils'
 
 import styles from './BuildTab.module.scss'
 
@@ -48,7 +49,7 @@ export interface QAPanelProps {
     initialAnswers?: string[]
     timerStartedAt: string | undefined
     isReadOnly?: boolean
-    onAnswerSuccess: (switchToReviewTab: boolean) => void
+    onAnswerSuccess: (pdfUrl: string) => void
 }
 
 interface QAPanelFormValues {
@@ -104,14 +105,12 @@ export const QAPanel: FC<QAPanelProps> = props => {
         if (!props.proposalId) return
 
         try {
-            await dispatch(answerQuestionsThunk(props.proposalId, { answers: formValues.answers }))
+            const response = await dispatch(answerQuestionsThunk(props.proposalId, { answers: formValues.answers }))
             props.cancelTimer()
             toast.success('Answers submitted successfully', toastOptions)
-            // Switch to Review Tab on success
-            props.onAnswerSuccess(true)
+            props.onAnswerSuccess(response.pdfUrl)
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to submit answers'
-            toast.error(errorMessage, toastOptions)
+            toast.error(getApiErrorMessage(err, 'Failed to submit answers'), toastOptions)
         }
     }
 

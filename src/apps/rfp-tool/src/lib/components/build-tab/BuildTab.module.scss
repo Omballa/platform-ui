@@ -91,11 +91,25 @@
   word-break: break-word;
   background: $tc-white;
   transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-1;
 
   &:hover {
     background: $black-5;
     border-color: $turq-160;
   }
+}
+
+.documentName {
+  font-weight: 500;
+  color: $black-100;
+  word-break: break-word;
+}
+
+.documentMeta {
+  font-size: 0.8rem;
+  color: $black-60;
 }
 
 // RequestPanel specific styles

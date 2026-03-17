@@ -50,3 +50,13 @@ export const clearStorage = (): void => {
         // Ignore storage clear failures.
     }
 }
+
+const pdfUrlKey = (proposalId: string): string => `rfp-tool-pdf-${proposalId}`
+
+export const storePdfUrl = (proposalId: string, pdfUrl: string): void => {
+    setToStorage(pdfUrlKey(proposalId), pdfUrl)
+}
+
+export const getStoredPdfUrl = (proposalId: string): string | undefined => (
+    getFromStorage<string>(pdfUrlKey(proposalId))
+)

@@ -6,7 +6,7 @@
 import type { FC, MouseEvent } from 'react'
 import { useState } from 'react'
 
-import { Button } from '~/libs/ui'
+import { Button, LoadingSpinner } from '~/libs/ui'
 
 import { useProposals } from '../..'
 import { NewProposalModal } from '../new-proposal-modal'
@@ -70,7 +70,7 @@ export const Sidebar: FC<SidebarProps> = props => {
             {/* Proposals list */}
             <div className={styles.proposalsList} data-accordion-open={props.isAccordionOpen}>
                 {isLoading ? (
-                    <div className={styles.emptyState}>Loading proposals...</div>
+                    <LoadingSpinner />
                 ) : proposals.length === 0 ? (
                     <div className={styles.emptyState}>No proposals yet. Create one to get started.</div>
                 ) : (

@@ -1,10 +1,9 @@
-import { useCallback, useMemo } from 'react'
-import { mutate } from 'swr'
+import { useCallback } from 'react'
+import useSWR from 'swr'
 
-import type { Proposal, ProposalsListResponse } from '../models'
-import { PROPOSALS_SWR_KEY } from '../services/cache-keys'
-
-import { useProposals } from './useProposals'
+import type { Proposal } from '../models'
+import { getProposal } from '../services'
+import { getProposalSwrKey } from '../services/cache-keys'
 
 interface UseProposalResult {
     error: string | undefined
@@ -19,44 +18,29 @@ interface UseProposalResult {
  * @param proposalId - The ID of the proposal to fetch
  */
 export function useProposal(proposalId: string | undefined): UseProposalResult {
-    const proposalsState = useProposals()
-    const proposals = proposalsState.proposals
-    const isLoading = proposalsState.isLoading
-    const error = proposalsState.error
-    const refresh = proposalsState.refresh
-    const proposal = useMemo(
-        () => proposals.find(item => item.id === proposalId),
-        [proposalId, proposals],
+    const swr = useSWR(
+        proposalId ? getProposalSwrKey(proposalId) : null,
+        () => getProposal(proposalId as string),
     )
-    const resolvedError = proposalId && !isLoading && !proposal && !error ? 'Proposal not found' : error
 
-    /**
-     * Update the proposal in local state
-     */
+    const proposal = swr.data
+    const error = swr.error instanceof Error ? swr.error.message : undefined
+    const isLoading = !!proposalId && !swr.data && !swr.error
+
+    const refresh = useCallback(async (): Promise<void> => {
+        if (!proposalId) return
+        await swr.mutate()
+    }, [proposalId, swr])
+
     const updateProposal = useCallback((updates: Partial<Proposal>): void => {
-        if (!proposalId) {
-            return
-        }
-
-        mutate(PROPOSALS_SWR_KEY, (current: ProposalsListResponse | undefined) => {
-            if (!current) {
-                return current
-            }
-
-            return {
-                proposals: current.proposals.map((item: Proposal) => (
-                    item.id === proposalId
-                        ? { ...item, ...updates }
-                        : item
-                )),
-            }
-        }, false)
+        if (!proposalId) return
+        swr.mutate(current => (current ? { ...current, ...updates } : current), false)
             .catch(() => undefined)
-    }, [proposalId])
+    }, [proposalId, swr])
 
     return {
-        error: resolvedError,
-        isLoading: proposalId ? isLoading : false,
+        error,
+        isLoading,
         proposal,
         refresh,
         updateProposal,

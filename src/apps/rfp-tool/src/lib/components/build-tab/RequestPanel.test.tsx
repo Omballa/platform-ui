@@ -108,7 +108,7 @@ describe('RequestPanel', () => {
 
     it('dispatches assess and returns timerStartedAt on success', async () => {
         const onAssessSuccess = jest.fn()
-        mockDispatch.mockResolvedValue({ timerStartedAt: '2026-02-28T12:00:00.000Z' })
+        mockDispatch.mockResolvedValue({ questions: ['Q1', 'Q2'], stub: 'stub', timerStartedAt: '2026-02-28T12:00:00.000Z' })
 
         render(
             <RequestPanel
@@ -139,7 +139,7 @@ describe('RequestPanel', () => {
 
         await waitFor(() => {
             expect(onAssessSuccess)
-                .toHaveBeenCalledWith('2026-02-28T12:00:00.000Z')
+                .toHaveBeenCalledWith({ questions: ['Q1', 'Q2'], stub: 'stub', timerStartedAt: '2026-02-28T12:00:00.000Z' })
         })
     })
 })

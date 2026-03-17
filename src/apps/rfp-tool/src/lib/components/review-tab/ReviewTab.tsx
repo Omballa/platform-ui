@@ -4,12 +4,14 @@
  */
 
 import type { FC } from 'react'
+import { useState } from 'react'
 import { toast } from 'react-toastify'
 
 import { Button } from '~/libs/ui'
 
 import { useProposal } from '../../hooks'
 import { requestQuoteThunk, useRfpToolDispatch, useRfpToolSelector } from '../../../redux'
+import { getApiErrorMessage } from '../../utils'
 
 import styles from './ReviewTab.module.scss'
 
@@ -44,13 +46,14 @@ export const ReviewTab: FC<ReviewTabProps> = props => {
             await refresh()
             toast.success('Quote requested successfully. You will be contacted shortly.', toastOptions)
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to request quote'
-            toast.error(errorMessage, toastOptions)
+            toast.error(getApiErrorMessage(err, 'Failed to request quote'), toastOptions)
         }
     }
 
     const isProposalComplete = proposal?.status === 'COMPLETED' || proposal?.status === 'QUOTE_REQUESTED'
     const isQuoteRequested = proposal?.status === 'QUOTE_REQUESTED'
+    const [pdfError, setPdfError] = useState(false)
+    const pdfUrl = proposal?.pdfUrl ?? null
 
     if (!props.proposalId) {
         return (
@@ -69,15 +72,35 @@ export const ReviewTab: FC<ReviewTabProps> = props => {
                 <div className={styles.message}>
                     Please complete the proposal in the Build tab before reviewing
                 </div>
+            ) : pdfUrl && !pdfError ? (
+                <div className={styles.pdfContainer}>
+                    <object
+                        data={pdfUrl}
+                        type='application/pdf'
+                        className={styles.pdfObject}
+                        onError={() => setPdfError(true)}
+                    >
+                        {/* Fallback for browsers that don't support inline PDF rendering */}
+                        <div className={styles.pdfFallback}>
+                            <p>Your browser cannot display the PDF inline.</p>
+                            <a href={pdfUrl} target='_blank' rel='noopener noreferrer'>
+                                Download Proposal PDF
+                            </a>
+                        </div>
+                    </object>
+                </div>
+            ) : pdfUrl && pdfError ? (
+                <div className={styles.message}>
+                    The proposal PDF could not be loaded. It may have been moved or deleted.
+                    {' '}
+                    <a href={pdfUrl} target='_blank' rel='noopener noreferrer'>
+                        Try downloading it directly.
+                    </a>
+                </div>
             ) : (
-                proposal?.pdfUrl && (
-                    <div className={styles.pdfContainer}>
-                        <iframe
-                            src={proposal.pdfUrl}
-                            title='Proposal PDF'
-                        />
-                    </div>
-                )
+                <div className={styles.message}>
+                    PDF is being generated. Please check back shortly.
+                </div>
             )}
 
             {/* Request Quote button */}

@@ -19,7 +19,8 @@ import {
     requestQuote,
     uploadDocuments,
 } from '../lib/services'
-import { getDocumentsSwrKey, PROPOSALS_SWR_KEY } from '../lib/services/cache-keys'
+import { getDocumentsSwrKey, getProposalSwrKey, PROPOSALS_SWR_KEY } from '../lib/services/cache-keys'
+import { storePdfUrl } from '../lib/utils/storage'
 
 import { ACTION_TYPES, type MutationOperation } from './action-types'
 
@@ -66,11 +67,7 @@ const getErrorMessage = (error: unknown, fallback: string): string => (
 )
 
 const refreshProposals = async (): Promise<void> => {
-    await mutate(
-        PROPOSALS_SWR_KEY,
-        async (): Promise<ProposalsListResponse> => getProposals(),
-        false,
-    )
+    await mutate(PROPOSALS_SWR_KEY)
 }
 
 /**
@@ -123,6 +120,7 @@ export const uploadDocumentsThunk = (proposalId: string, files: File[]) => async
         return documents
     } catch (error) {
         const message = getErrorMessage(error, 'Upload failed')
+        console.error('Document upload error:', error)
         dispatch(mutationFailed('uploadDocuments', message))
         throw error
     }
@@ -138,6 +136,25 @@ export const assessProposalThunk = (proposalId: string, body: AssessProposalRequ
 
     try {
         const response = await assessProposal(proposalId, body)
+
+        // Optimistically apply assess response to the single-proposal cache so
+        // BuildTab sees status/questions/timerStartedAt immediately, then
+        // revalidate in the background to sync any other server-side changes.
+        await mutate(
+            getProposalSwrKey(proposalId),
+            (current: Proposal | undefined) => (
+                current
+                    ? {
+                        ...current,
+                        questions: response.questions,
+                        stub: response.stub,
+                        timerStartedAt: response.timerStartedAt,
+                        status: 'ASSESSED' as const,
+                    }
+                    : current
+            ),
+            true,
+        )
         await refreshProposals()
 
         dispatch(mutationSucceeded('assessProposal'))
@@ -159,8 +176,8 @@ export const answerQuestionsThunk = (proposalId: string, body: AnswerQuestionsRe
 
     try {
         const response = await answerQuestions(proposalId, body)
-        await refreshProposals()
-
+        storePdfUrl(proposalId, response.pdfUrl)
+        await mutate(getProposalSwrKey(proposalId))
         dispatch(mutationSucceeded('answerQuestions'))
         return response
     } catch (error) {

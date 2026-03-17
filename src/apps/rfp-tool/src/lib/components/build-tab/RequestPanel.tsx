@@ -8,8 +8,9 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { Button, InputTextarea, LoadingSpinner } from '~/libs/ui'
 
 import { useProposal } from '../../hooks'
-import { getWordCount } from '../../utils'
+import { getApiErrorMessage, getWordCount } from '../../utils'
 import { MAX_SUMMARY_WORDS } from '../../../config'
+import type { AssessProposalResponse } from '../../models'
 import { assessProposalThunk, useRfpToolDispatch, useRfpToolSelector } from '../../../redux'
 
 import styles from './BuildTab.module.scss'
@@ -32,7 +33,7 @@ const summarySchema = Yup.object()
 
 export interface RequestPanelProps {
     proposalId: string | undefined
-    onAssessSuccess: (timerStartedAt: string) => void
+    onAssessSuccess: (response: AssessProposalResponse) => void
 }
 
 interface RequestPanelFormValues {
@@ -90,10 +91,21 @@ export const RequestPanel: FC<RequestPanelProps> = props => {
         try {
             const result = await dispatch(assessProposalThunk(props.proposalId, { summary: formValues.summary }))
             toast.success('Assessment completed successfully', toastOptions)
-            props.onAssessSuccess(result.timerStartedAt)
+            props.onAssessSuccess(result)
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Assessment failed'
-            toast.error(errorMessage, toastOptions)
+            const status = (err as { status?: number })?.status
+            if (status === 502) {
+                toast.error(
+                    'The AI service is temporarily unavailable. Please try again.',
+                    {
+                        ...toastOptions,
+                        toastId: `assess-502-${props.proposalId}`,
+                    },
+                )
+                return
+            }
+
+            toast.error(getApiErrorMessage(err, 'Assessment failed'), toastOptions)
         }
     }
 

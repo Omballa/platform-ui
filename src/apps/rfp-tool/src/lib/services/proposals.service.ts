@@ -1,17 +1,3 @@
-/**
- * Proposals API Service
- *
- * This service layer abstracts the API calls and allows easy switching between
- * mock implementation and real backend calls.
- *
- * For the mock implementation (this challenge), all calls delegate to mockHandlers.
- * For real integration (Integration challenge), replace these implementations with
- * actual XHR calls to the backend API.
- */
-
-import {
-    mockHandlers,
-} from '../mock'
 import type {
     AnswerQuestionsRequest,
     AnswerQuestionsResponse,
@@ -19,116 +5,95 @@ import type {
     AssessProposalResponse,
     CreateProposalRequest,
     Proposal,
-    ProposalDocument,
     ProposalsListResponse,
     RequestQuoteResponse,
 } from '../models'
+import { EnvironmentConfig } from '~/config'
+import {
+    xhrGetAsync,
+    xhrPostAsync,
+} from '~/libs/core'
+import { getStoredPdfUrl } from '../utils/storage'
 
-/**
- * Toggle between mock and real API
- * Set to false in production to use real backend
- */
-const USE_MOCK = true
+const RFP_TOOL_API_BASE: string =
+    process.env.REACT_APP_RFP_TOOL_API
+    || (EnvironmentConfig.ENV === 'local' ? 'http://localhost:3000' : EnvironmentConfig.API.URL)
 
-/**
- * GET /proposals
- * Fetch all proposals for the current user
- */
+const normalizeProposal = (proposal: Proposal): Proposal => ({
+    ...proposal,
+    summary: proposal.summary ?? null,
+    stub: proposal.stub ?? null,
+    questions: proposal.questions ?? null,
+    answers: proposal.answers ?? null,
+    timerStartedAt: proposal.timerStartedAt ?? null,
+    pdfUrl: proposal.pdfUrl ?? getStoredPdfUrl(proposal.id) ?? null,
+    quoteRequestedAt: proposal.quoteRequestedAt ?? null,
+})
+
+const normalizeProposalsListResponse = (
+    response: ProposalsListResponse,
+): ProposalsListResponse => ({
+    proposals: response.proposals?.map(normalizeProposal) ?? [],
+})
+
 export const getProposals = async (): Promise<ProposalsListResponse> => {
-    if (USE_MOCK) {
-        return mockHandlers.getProposals()
-    }
+    const response = await xhrGetAsync<ProposalsListResponse>(
+        `${RFP_TOOL_API_BASE}/proposals`,
+    )
 
-    // Future: return xhrGetAsync<ProposalsListResponse>('/proposals')
-    throw new Error('Real API not implemented yet')
+    return normalizeProposalsListResponse(response)
 }
 
-/**
- * POST /proposals
- * Create a new proposal
- */
-export const createProposal = async (body: CreateProposalRequest): Promise<Proposal> => {
-    if (USE_MOCK) {
-        return mockHandlers.createProposal(body)
-    }
+export const getProposal = async (proposalId: string): Promise<Proposal> => {
+    const response = await xhrGetAsync<Proposal>(
+        `${RFP_TOOL_API_BASE}/proposals/${proposalId}`,
+    )
 
-    // Future: return xhrPostAsync<Proposal>('/proposals', body)
-    throw new Error('Real API not implemented yet')
+    return normalizeProposal(response)
 }
 
-/**
- * GET /proposals/{id}/documents
- * Fetch documents for a specific proposal
- */
-export const getDocuments = async (proposalId: string): Promise<ProposalDocument[]> => {
-    if (USE_MOCK) {
-        return mockHandlers.getDocuments(proposalId)
-    }
+export const createProposal = async (
+    body: CreateProposalRequest,
+): Promise<Proposal> => {
+    const response = await xhrPostAsync<CreateProposalRequest, Proposal>(
+        `${RFP_TOOL_API_BASE}/proposals`,
+        body,
+    )
 
-    // Future: return xhrGetAsync<ProposalDocument[]>(`/proposals/${proposalId}/documents`)
-    throw new Error('Real API not implemented yet')
+    return normalizeProposal(response)
 }
 
-/**
- * POST /proposals/{id}/documents
- * Upload documents to a proposal
- */
-export const uploadDocuments = async (
-    proposalId: string,
-    files: File[],
-): Promise<ProposalDocument[]> => {
-    if (USE_MOCK) {
-        return mockHandlers.uploadDocuments(proposalId, files)
-    }
-
-    // Future: Use FormData for multipart upload
-    // const formData = new FormData()
-    // files.forEach(file => formData.append('files', file))
-    // return xhrPostAsync<ProposalDocument[]>(`/proposals/${proposalId}/documents`, formData)
-    throw new Error('Real API not implemented yet')
-}
-
-/**
- * POST /proposals/{id}/assess
- * Assess proposal after uploading documents and summary
- */
 export const assessProposal = async (
     proposalId: string,
     body: AssessProposalRequest,
 ): Promise<AssessProposalResponse> => {
-    if (USE_MOCK) {
-        return mockHandlers.assessProposal(proposalId, body)
-    }
+    const response = await xhrPostAsync<AssessProposalRequest, AssessProposalResponse>(
+        `${RFP_TOOL_API_BASE}/proposals/${proposalId}/assess`,
+        body,
+    )
 
-    // Future: return xhrPostAsync<AssessProposalResponse>(`/proposals/${proposalId}/assess`, body)
-    throw new Error('Real API not implemented yet')
+    return response
 }
 
-/**
- * POST /proposals/{id}/answer
- * Answer clarifying questions and generate proposal
- */
 export const answerQuestions = async (
     proposalId: string,
     body: AnswerQuestionsRequest,
 ): Promise<AnswerQuestionsResponse> => {
-    if (USE_MOCK) {
-        return mockHandlers.answerQuestions(proposalId, body)
-    }
+    const response = await xhrPostAsync<AnswerQuestionsRequest, AnswerQuestionsResponse>(
+        `${RFP_TOOL_API_BASE}/proposals/${proposalId}/answer`,
+        body,
+    )
 
-    // Future: return xhrPostAsync<AnswerQuestionsResponse>(`/proposals/${proposalId}/answer`, body)
-    throw new Error('Real API not implemented yet')
+    return response
 }
 
-/**
- * POST /proposals/{id}/quote
- * Request a quote for the proposal
- */
-export const requestQuote = async (proposalId: string): Promise<RequestQuoteResponse> => {
-    if (USE_MOCK) {
-        return mockHandlers.requestQuote(proposalId)
-    }
+export const requestQuote = async (
+    proposalId: string,
+): Promise<RequestQuoteResponse> => {
+    const response = await xhrPostAsync<{}, RequestQuoteResponse>(
+        `${RFP_TOOL_API_BASE}/proposals/${proposalId}/quote`,
+        {},
+    )
 
-    // Future: return xhrPostAsync<RequestQuoteResponse>(`/proposals/${proposalId}/quote`, {})
-    throw new Error('Real API not implemented yet')
+    return response
 }

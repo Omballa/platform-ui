@@ -10,6 +10,7 @@ import classNames from 'classnames'
 import { ASSESSMENT_QUESTIONS } from '../../../config'
 import { useProposal, useTimer } from '../../hooks'
 import { formatCountdownTimer } from '../../utils'
+import type { AssessProposalResponse } from '../../models'
 
 import { DocumentsPanel } from './DocumentsPanel'
 import { RequestPanel } from './RequestPanel'
@@ -34,6 +35,7 @@ interface AssessmentViewState {
 export const BuildTab: FC<BuildTabProps> = props => {
     const proposalState = useProposal(props.proposalId)
     const proposal = proposalState.proposal
+    const updateProposal = proposalState.updateProposal
     const timerState = useTimer(props.proposalId)
     const cancelTimer = timerState.cancelTimer
     const isExpired = timerState.isExpired
@@ -45,14 +47,15 @@ export const BuildTab: FC<BuildTabProps> = props => {
         questions: [],
         timerStartedAt: undefined,
     })
-    const hasAssessmentState = proposal?.status === 'ASSESSED'
-        || proposal?.status === 'COMPLETED'
-        || proposal?.status === 'QUOTE_REQUESTED'
+    const hasAssessmentState = assessmentViewState.proposalId === props.proposalId
+        && assessmentViewState.questions.length > 0
     const isCurrentAssessmentState = assessmentViewState.proposalId === props.proposalId
     const showTimer = proposal?.status === 'ASSESSED' && isCurrentAssessmentState && timeRemaining !== undefined
     const timerValue = timeRemaining ?? 0
 
-    // Load assessment state from proposal when it changes
+    // Load assessment state from proposal when it changes.
+    // For ASSESSED status, only sync from server if we don't already have
+    // local state set (i.e. handleAssessSuccess hasn't run yet for this proposal).
     useEffect(() => {
         if (!proposal) {
             setAssessmentViewState({
@@ -68,15 +71,23 @@ export const BuildTab: FC<BuildTabProps> = props => {
         const proposalAnswers = proposal.answers ?? []
 
         if (proposal.status === 'ASSESSED') {
-            setAssessmentViewState({
-                answers: [],
-                proposalId: props.proposalId,
-                questions: [...proposalQuestions],
-                timerStartedAt: proposal.timerStartedAt ?? undefined,
+            setAssessmentViewState(current => {
+                // handleAssessSuccess already populated state for this proposal — don't overwrite
+                if (current.proposalId === props.proposalId && current.questions.length > 0) {
+                    return current
+                }
+
+                if (proposal.timerStartedAt) {
+                    startTimer(proposal.timerStartedAt)
+                }
+
+                return {
+                    answers: [],
+                    proposalId: props.proposalId,
+                    questions: [...proposalQuestions],
+                    timerStartedAt: proposal.timerStartedAt ?? undefined,
+                }
             })
-            if (proposal.timerStartedAt) {
-                startTimer(proposal.timerStartedAt)
-            }
         } else if (proposal.status === 'COMPLETED' || proposal.status === 'QUOTE_REQUESTED') {
             setAssessmentViewState({
                 answers: [...proposalAnswers],
@@ -94,26 +105,24 @@ export const BuildTab: FC<BuildTabProps> = props => {
         }
     }, [proposal, props.proposalId, startTimer])
 
-    function handleAssessSuccess(startedAt: string): void {
+    function handleAssessSuccess(response: AssessProposalResponse): void {
         setAssessmentViewState({
             answers: [],
             proposalId: props.proposalId,
-            questions: proposal?.questions ? [...proposal.questions] : [...ASSESSMENT_QUESTIONS],
-            timerStartedAt: startedAt,
+            questions: response.questions.length > 0 ? [...response.questions] : [...ASSESSMENT_QUESTIONS],
+            timerStartedAt: response.timerStartedAt,
         })
-        startTimer(startedAt)
+        startTimer(response.timerStartedAt)
     }
 
-    function handleAnswerSuccess(switchToReviewTab: boolean): void {
+    function handleAnswerSuccess(pdfUrl: string): void {
+        updateProposal({ pdfUrl, status: 'COMPLETED' })
         setAssessmentViewState(currentState => ({
             ...currentState,
             answers: [],
             timerStartedAt: undefined,
         }))
-
-        if (switchToReviewTab) {
-            props.onAnswerComplete?.()
-        }
+        props.onAnswerComplete?.()
     }
 
     if (!props.proposalId) {

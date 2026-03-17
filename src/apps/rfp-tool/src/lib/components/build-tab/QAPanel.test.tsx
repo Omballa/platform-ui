@@ -139,6 +139,6 @@ describe('QAPanel', () => {
         expect(mockCancelTimer)
             .toHaveBeenCalled()
         expect(onAnswerSuccess)
-            .toHaveBeenCalledWith(true)
+            .toHaveBeenCalledWith('/rfp-tool/mock-proposal.pdf')
     })
 })
