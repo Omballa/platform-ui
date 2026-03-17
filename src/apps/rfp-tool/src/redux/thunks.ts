@@ -153,7 +153,7 @@ export const assessProposalThunk = (proposalId: string, body: AssessProposalRequ
                     }
                     : current
             ),
-            true,
+            false,
         )
         await refreshProposals()
 
@@ -177,7 +177,16 @@ export const answerQuestionsThunk = (proposalId: string, body: AnswerQuestionsRe
     try {
         const response = await answerQuestions(proposalId, body)
         storePdfUrl(proposalId, response.pdfUrl)
-        await mutate(getProposalSwrKey(proposalId))
+        await mutate(
+            getProposalSwrKey(proposalId),
+            (current: Proposal | undefined) => (
+                current
+                    ? { ...current, pdfUrl: response.pdfUrl, status: 'COMPLETED' as const }
+                    : current
+            ),
+            false,
+        )
+        await refreshProposals()
         dispatch(mutationSucceeded('answerQuestions'))
         return response
     } catch (error) {

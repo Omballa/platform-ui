@@ -9,9 +9,10 @@ import { toast } from 'react-toastify'
 
 import { Button } from '~/libs/ui'
 
-import { useProposal } from '../../hooks'
+import { useProposal, useProposals } from '../../hooks'
 import { requestQuoteThunk, useRfpToolDispatch, useRfpToolSelector } from '../../../redux'
 import { getApiErrorMessage } from '../../utils'
+import { getStoredPdfUrl } from '../../utils/storage'
 
 import styles from './ReviewTab.module.scss'
 
@@ -29,6 +30,7 @@ export interface ReviewTabProps {
 export const ReviewTab: FC<ReviewTabProps> = props => {
     const proposalState = useProposal(props.proposalId)
     const proposal = proposalState.proposal
+    const isLoading = proposalState.isLoading
     const refresh = proposalState.refresh
     const updateProposal = proposalState.updateProposal
     const dispatch = useRfpToolDispatch()
@@ -50,12 +52,15 @@ export const ReviewTab: FC<ReviewTabProps> = props => {
         }
     }
 
-    const isProposalComplete = proposal?.status === 'COMPLETED' || proposal?.status === 'QUOTE_REQUESTED'
-    const isQuoteRequested = proposal?.status === 'QUOTE_REQUESTED'
+    const { proposals } = useProposals()
+    const listedProposal = proposals.find(p => p.id === props.proposalId)
+    const status = proposal?.status ?? listedProposal?.status
+    const isProposalComplete = status === 'COMPLETED' || status === 'QUOTE_REQUESTED'
+    const isQuoteRequested = status === 'QUOTE_REQUESTED'
     const [pdfError, setPdfError] = useState(false)
-    const pdfUrl = proposal?.pdfUrl ?? null
+    const pdfUrl = proposal?.pdfUrl ?? (props.proposalId ? getStoredPdfUrl(props.proposalId) ?? null : null)
 
-    if (!props.proposalId) {
+    if (!props.proposalId || isLoading) {
         return (
             <div className={styles.reviewTab}>
                 <div className={styles.emptyState}>
@@ -99,7 +104,7 @@ export const ReviewTab: FC<ReviewTabProps> = props => {
                 </div>
             ) : (
                 <div className={styles.message}>
-                    PDF is being generated. Please check back shortly.
+                    The proposal PDF is not available. It may have expired or was generated in a previous session.
                 </div>
             )}
 
